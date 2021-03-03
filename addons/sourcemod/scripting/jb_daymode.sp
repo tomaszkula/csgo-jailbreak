@@ -12,7 +12,6 @@
 #pragma newdecls required
 
 DayMode dayMode = None;
-
 GlobalForward onDayModeChanged = null;
 
 public Plugin myinfo = 

@@ -29,7 +29,9 @@ char msgNormal[] =
 	..."[ Typ Dnia | %s ]\n"
 	..."\n"
 	..."[ Więźniowie | %i / %i ]\n"
-	..."[ Strażnicy | %i / %i ]\n";
+	..."[ Strażnicy | %i / %i ]\n"
+	..."\n"
+	..."%s";
 
 Handle mainHUD = null;
 int day = 0;
@@ -94,8 +96,21 @@ public Action DisplayMainHUD(Handle _timer)
 	}
 	else
 	{
+		int _simon = JB_GetSimon();
+		char _simonInfo[LENGTH_32];
+		if(_simon == 0)
+		{
+			Format(_simonInfo, sizeof(_simonInfo), "[ BRAK PROWADZĄCEGO ]");
+		}
+		else
+		{
+			char _simonName[LENGTH_32];
+			GetClientName(_simon, _simonName, sizeof(_simonName));
+			Format(_simonInfo, sizeof(_simonInfo), "[ PROWADZĄCY : %s ]", _simonName);
+		}
+		
 		Format(fullMsg, sizeof(fullMsg), msgNormal,
-			day, dayName, dayModeName, JB_GetPrisonersCount(true), JB_GetPrisonersCount(), JB_GetWardensCount(true), JB_GetWardensCount());
+			day, dayName, dayModeName, JB_GetPrisonersCount(true), JB_GetPrisonersCount(), JB_GetWardensCount(true), JB_GetWardensCount(), _simonInfo);
 	}
 	
 	SetHudTextParams(0.16, 0.03, 1.5, 255, 255, 110, 0);
