@@ -21,7 +21,6 @@ char guns[6][2][LENGTH_64] =
 	{"weapon_famas",				"Famas"}
 };
 
-bool isEventHooked[2];
 bool isUsed[MAXPLAYERS];
 
 public Plugin myinfo = 
@@ -35,35 +34,13 @@ public Plugin myinfo =
 
 public void OnPluginStart()
 {
-	RegConsoleCmd("bronie", GunsMenuCmd);
+	HookEvent("round_prestart", Event_RoundPrestart_Post);
+	HookEvent("player_spawn", Event_PlayerSpawn_Post);
+	
 	RegConsoleCmd("guns", GunsMenuCmd);
-}
-
-public void OnMapStart()
-{
-	for (int i = 0; i < sizeof(isEventHooked); i++)
-	{
-		isEventHooked[i] = false;
-	}
-}
-
-public void OnDayModeChanged(DayMode _dayMode)
-{
-	if(_dayMode == WarmUp || _dayMode == Normal)
-	{
-		if(isEventHooked[0] == false) isEventHooked[0] = HookEventEx("round_prestart", Event_RoundPrestart_Post);
-		if(isEventHooked[1] == false) isEventHooked[1] = HookEventEx("player_spawn", Event_PlayerSpawn_Post);
-		
-		for (int i = 1; i <= MaxClients; i++)
-		{
-			isUsed[i] = false;
-		}
-	}
-	else
-	{
-		if(isEventHooked[0]) UnhookEvent("round_prestart", Event_RoundPrestart_Post);
-		if(isEventHooked[1]) UnhookEvent("player_spawn", Event_PlayerSpawn_Post);
-	}
+	RegConsoleCmd("gun", GunsMenuCmd);
+	RegConsoleCmd("bronie", GunsMenuCmd);
+	RegConsoleCmd("bron", GunsMenuCmd);
 }
 
 public Action Event_RoundPrestart_Post(Event _event, const char[] _name, bool _dontBroadcast)
@@ -101,13 +78,14 @@ public Action GunsMenuCmd(int _client, int _args)
 
 void displayGunsMenu(int _client)
 {
-	if(!IsPlayerAlive(_client) || GetClientTeam(_client) != CS_TEAM_CT || isUsed[_client])
+	if((JB_GetDayMode() != Normal && JB_GetDayMode() != WarmUp) ||
+		!IsPlayerAlive(_client) || GetClientTeam(_client) != CS_TEAM_CT || isUsed[_client])
 	{
 		return;
 	}
 	
 	Menu _menu = CreateMenu(GunsMenuHandler);
-	_menu.SetTitle("[Menu] Wybierz broń");
+	_menu.SetTitle("[ Wybierz broń ]");
 	for (int i = 0; i < sizeof(guns); i++)
 	{
 		_menu.AddItem(guns[i][0], guns[i][1]);
@@ -121,7 +99,8 @@ public int GunsMenuHandler(Menu _menu, MenuAction _action, int _param1, int _par
 	{
 		case MenuAction_Select:
 		{
-			if(!IsPlayerAlive(_param1) || GetClientTeam(_param1) != CS_TEAM_CT || isUsed[_param1])
+			if((JB_GetDayMode() != Normal && JB_GetDayMode() != WarmUp) ||
+				!IsPlayerAlive(_param1) || GetClientTeam(_param1) != CS_TEAM_CT || isUsed[_param1])
 			{
 				return -1;
 			}

@@ -37,10 +37,14 @@ public void OnMapStart()
 	beamSprite = PrecacheModel("materials/sprites/laserbeam.vmt");
 	
 	HookEvent("round_prestart", Event_RoundPrestart_Post);
-	HookEvent("player_team", Event_PlayerTeam_Post);
 	HookEvent("player_death", Event_PlayerDeath_Post);
 	
 	CreateTimer(0.1, PaintTimer, _, TIMER_REPEAT);
+}
+
+public void OnClientDisconnect_Post(int _client)
+{
+	isPainting[_client] = false;
 }
 
 public Action Event_RoundPrestart_Post(Event _event, const char[] _name, bool _dontBroadcast)
@@ -48,18 +52,6 @@ public Action Event_RoundPrestart_Post(Event _event, const char[] _name, bool _d
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		isPainting[i] = false;
-	}
-	
-	return Plugin_Continue;
-}
-
-public Action Event_PlayerTeam_Post(Event _event, const char[] _name, bool _dontBroadcast)
-{
-	bool _isDisconnected = _event.GetBool("disconnect");
-	if(_isDisconnected)
-	{
-		int _client = GetClientOfUserId(_event.GetInt("userid"));
-		isPainting[_client] = false;
 	}
 	
 	return Plugin_Continue;

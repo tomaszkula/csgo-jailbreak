@@ -7,6 +7,7 @@
 
 #include <sourcemod>
 #include <sdktools>
+#include <sdkhooks>
 #include <csgo_jailbreak>
 
 #pragma newdecls required
@@ -14,6 +15,7 @@
 #define AUTO_SIMON_DELAY 15.0
 
 int simon = 0;
+int dynamicGlow[MAXPLAYERS];
 Handle autoSimonTimer = null;
 GlobalForward onSimonChanged = null;
 
@@ -37,10 +39,18 @@ public void OnPluginStart()
 {
 	HookEvent("round_prestart", Event_RoundPrestart_Post);
 	HookEvent("round_freeze_end", Event_RoundFreezeEnd_Post);
-	HookEvent("player_team", Event_PlayerTeam_Post);
 	HookEvent("player_death", Event_PlayerDeath_Post);
 	
 	onSimonChanged = CreateGlobalForward("OnSimonChanged", ET_Event, Param_Cell);
+}
+
+public void OnClientDisconnect_Post(int _client)
+{
+	if(_client == simon)
+	{
+		removeSimon();
+		addRandomSimon();
+	}
 }
 
 public Action Event_RoundPrestart_Post(Event _event, const char[] _name, bool _dontBroadcast)
@@ -54,22 +64,6 @@ public Action Event_RoundFreezeEnd_Post(Event _event, const char[] _name, bool _
 	if(simon == 0)
 	{
 		autoSimonTimer = CreateTimer(AUTO_SIMON_DELAY, AutoSimonTimer);
-	}
-	
-	return Plugin_Continue;
-}
-
-public Action Event_PlayerTeam_Post(Event _event, const char[] _name, bool _dontBroadcast)
-{
-	bool _isDisconnected = _event.GetBool("disconnect");
-	if(_isDisconnected)
-	{
-		int _client = GetClientOfUserId(_event.GetInt("userid"));
-		if(_client == simon)
-		{
-			removeSimon();
-			addRandomSimon();
-		}
 	}
 	
 	return Plugin_Continue;
@@ -113,7 +107,6 @@ void addRandomSimon()
 	{
 		int _simon = _wardens[GetRandomInt(0, _wardensCount - 1)];
 		JB_AddSimon(_simon);
-		//JB_DisplaySimonMenu(_newSimon);
 	}
 }
 
@@ -128,7 +121,16 @@ void breakAutoSimonTimer()
 
 void removeSimon()
 {
+	if(JB_GetSimon() == 0)
+	{
+		return;
+	}
+	
+	SDKUnhook(dynamicGlow[simon], SDKHook_SetTransmit, SDKHookCB_SetTransmit);
+	RemoveEntity(dynamicGlow[simon]);
+	dynamicGlow[simon] = -1;
 	simon = 0;
+	
 	Call_StartForward(onSimonChanged);
 	Call_PushCell(0);
 	Call_Finish();
@@ -164,10 +166,13 @@ public int AddSimon(Handle plugin, int argc)
 	}
 	
 	simon = _client;
+	dynamicGlow[_client] = JB_RenderDynamicGlow(_client, "0 0 255");
+	SDKHook(dynamicGlow[_client], SDKHook_SetTransmit, SDKHookCB_SetTransmit);
+	breakAutoSimonTimer();
+	
 	Call_StartForward(onSimonChanged);
 	Call_PushCell(_client);
 	Call_Finish();
 	
-	breakAutoSimonTimer();
 	return true;
 }
