@@ -26,6 +26,7 @@ public Plugin myinfo =
 public APLRes AskPluginLoad2(Handle myself, bool late, char [] error, int err_max)
 {
 	CreateNative("JB_GetDayMode", GetDayMode);
+	CreateNative("JB_SetDayMode", SetDayMode);
 	CreateNative("JB_GetDayModeName", GetDayModeName);
 }
 
@@ -46,7 +47,7 @@ public void OnDayChanged(int _day)
 	}
 	else if(_day % 7 == 6 || _day % 7 == 0)
 	{
-		setDayMode(Game);
+		setDayMode(RandomGame);
 	}
 	else
 	{
@@ -72,6 +73,12 @@ public any GetDayMode(Handle plugin, int argc)
 	return dayMode;
 }
 
+public int SetDayMode(Handle plugin, int argc)
+{
+	DayMode _dayMode = GetNativeCell(1);
+	setDayMode(_dayMode);
+}
+
 public int GetDayModeName(Handle plugin, int argc)
 {
 	char _dayModeName[LENGTH_32];
@@ -82,8 +89,9 @@ public int GetDayModeName(Handle plugin, int argc)
 	{
 		case None: _dayModeName = "BRAK";
 		case WarmUp: _dayModeName = "ROZGRZEWKA";
-		case Game: _dayModeName = "LOSOWA ZABAWA";
 		case Normal: _dayModeName = "NORMALNY";
+		case RandomGame: _dayModeName = "ZABAWA";
+		case Game: _dayModeName = "ZABAWA";
 	}
 	
 	SetNativeString(2, _dayModeName, _dayModeNameLength);

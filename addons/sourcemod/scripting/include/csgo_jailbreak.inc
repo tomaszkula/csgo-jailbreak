@@ -53,7 +53,18 @@ enum DayMode
 	None = 0,
 	WarmUp = 1,
 	Normal = 2,
-	Game = 3
+	RandomGame = 3,
+	Game = 4
+}
+
+enum DamageMode
+{
+	v = 0,
+	TvCT = 1,
+	TvT = 2,
+	CTvCT = 3,
+	TvT_CTvCT = 4,
+	TvTvCTvCT = 5
 }
 
 
@@ -87,6 +98,15 @@ forward void OnRemoveRebel(int _client);
 
 
 
+// Called when game with _gameID started
+forward void OnGameStart(int _gameID);
+
+// Called when game with _gameID ended
+forward void OnGameEnd(int _gameID);
+
+
+
+
 ////////////////////////////////////////////////////////////
 ///////////////////////// NATIVES //////////////////////////
 ////////////////////////////////////////////////////////////
@@ -105,6 +125,9 @@ native void JB_GetDayName(int _day, char[] _dayName, int _dayNameLength);
 
 // Returns day mode
 native DayMode JB_GetDayMode();
+
+// Sets day mode to _dayMode
+native void JB_SetDayMode(DayMode _dayMode);
 
 /*
  * Returns name of day mode for a given day mode
@@ -190,6 +213,9 @@ native void JB_RemoveFreeDay(int _client);
 // Checks has _client a freeday
 native bool JB_HasFreeDay(int _client);
 
+// Checks has _client a freeday next day
+native bool JB_HasFreeDayNextDay(int _client);
+
 
 
 
@@ -224,6 +250,20 @@ native bool JB_IsVip(int _client);
 
 // Checks is _client a SuperVIP
 native bool JB_IsSuperVip(int _client);
+
+
+
+
+native int JB_RegisterGame(char[] _gameName, int _gameTime);
+native int JB_GetGamesCount();
+native bool JB_GetGameName(int _gameID, char[] _gameName, int _gameNameLength);
+native int JB_GetCurrentGame();
+native int JB_GetCurrentGameTime();
+native void JB_StartGame(int _gameID);
+native void JB_EndGame();
+
+native void JB_SetDamageMode(DamageMode _damageMode);
+native void JB_PlayCountdownSound(int _number);
 
 
 
@@ -324,7 +364,6 @@ stock int JB_RenderDynamicGlow(int _client, char[] _color)
 	GetClientModel(_client, _clientModel, sizeof(_clientModel));
 	
 	int _dynamicGlow = CreateEntityByName("prop_dynamic_glow");
-	//SDKHook(skin, SDKHook_SetTransmit, SetTransmitSDKHook);
 	DispatchKeyValue(_dynamicGlow, "model", _clientModel);
 	DispatchKeyValue(_dynamicGlow, "disablereceiveshadows", "1");
 	DispatchKeyValue(_dynamicGlow, "disableshadows", "1");

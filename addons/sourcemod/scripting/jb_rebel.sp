@@ -47,6 +47,14 @@ public void OnClientDisconnect_Post(int _client)
 	JB_RemoveRebel(_client);
 }
 
+public void OnGameStart(int _gameID)
+{
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		JB_RemoveRebel(i);
+	}
+}
+
 public Action Event_RoundPrestart_Post(Event _event, const char[] _name, bool _dontBroadcast)
 {
 	for (int i = 1; i <= MaxClients; i++)

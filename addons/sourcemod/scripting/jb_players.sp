@@ -80,9 +80,6 @@ public Action Event_PlayerSpawn_Post(Event _event, const char[] _name, bool _don
     	
         RemovePlayerItem(_client, _weapon);
     }
-    
-	int _knife = GetPlayerWeaponSlot(_client, 2);
-	SetEntPropEnt(_client, Prop_Send, "m_hActiveWeapon", _knife);
 	
 	if (GetClientTeam(_client) == CS_TEAM_CT)
 	{
@@ -105,6 +102,15 @@ public Action Event_PlayerSpawn_Post(Event _event, const char[] _name, bool _don
 			SetEntityModel(_client, prisonerModels[_modelID][0]); // player model
 			SetEntPropString(_client, Prop_Send, "m_szArmsModel", prisonerModels[_modelID][1]); // arms model
 		}
+		
+		int _knife = GetPlayerWeaponSlot(_client, 2);
+		if(_knife != -1)
+		{
+			RemovePlayerItem(_client, _knife);
+		}
+		int _fists = GivePlayerItem(_client, "weapon_fists");
+		EquipPlayerWeapon(_client, _fists);
+		SetEntPropEnt(_client, Prop_Send, "m_hActiveWeapon", _knife);
 	}
 	
 	return Plugin_Continue;

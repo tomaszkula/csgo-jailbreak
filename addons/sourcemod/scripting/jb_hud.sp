@@ -33,6 +33,12 @@ char msgNormal[] =
 	..."\n"
 	..."%s";
 
+char msgGame[] =
+	"[ %i Dzień | %s ]\n"
+	..."[ Typ Dnia | %s ]\n"
+	..."\n"
+	..."%s";
+
 Handle mainHUD = null;
 int day = 0;
 char dayName[LENGTH_32] = "";
@@ -94,23 +100,42 @@ public Action DisplayMainHUD(Handle _timer)
 		Format(fullMsg, sizeof(fullMsg), msgWarmUp,
 			day, dayName, dayModeName, JB_GetPrisonersCount(true), JB_GetPrisonersCount(), JB_GetWardensCount(true), JB_GetWardensCount(), _godModeTimeInfo);
 	}
-	else
+	else if(dayMode == Normal)
 	{
 		int _simon = JB_GetSimon();
-		char _simonInfo[LENGTH_32];
+		char _simonInfo[LENGTH_64];
 		if(_simon == 0)
 		{
 			Format(_simonInfo, sizeof(_simonInfo), "[ BRAK PROWADZĄCEGO ]");
 		}
 		else
 		{
-			char _simonName[LENGTH_32];
+			char _simonName[LENGTH_64];
 			GetClientName(_simon, _simonName, sizeof(_simonName));
 			Format(_simonInfo, sizeof(_simonInfo), "[ PROWADZĄCY : %s ]", _simonName);
 		}
 		
 		Format(fullMsg, sizeof(fullMsg), msgNormal,
 			day, dayName, dayModeName, JB_GetPrisonersCount(true), JB_GetPrisonersCount(), JB_GetWardensCount(true), JB_GetWardensCount(), _simonInfo);
+	}
+	else
+	{
+		int _gameID = JB_GetCurrentGame();
+		char _gameName[LENGTH_64];
+		JB_GetGameName(_gameID, _gameName, sizeof(_gameName));
+		
+		int _gameTime = JB_GetCurrentGameTime();
+		char _gameInfo[LENGTH_64];
+		if(_gameTime > 0)
+		{
+			Format(_gameInfo, sizeof(_gameInfo), "[ %is ][ %s ]", _gameTime, _gameName);
+		}
+		else
+		{
+			Format(_gameInfo, sizeof(_gameInfo), "[ %s ]", _gameName);
+		}
+		Format(fullMsg, sizeof(fullMsg), msgGame,
+			day, dayName, dayModeName, _gameInfo);
 	}
 	
 	SetHudTextParams(0.16, 0.03, 1.5, 255, 255, 110, 0);

@@ -17,12 +17,18 @@
 #define VIP_HEALTH 110
 #define VIP_SMOKE_CHANCE 0.5
 #define VIP_FLASH_CHANCE 0.1
+#define VIP_JUMPS_COUNT 2
 
 #define SUPER_VIP_FLAG ADMFLAG_CUSTOM2
 #define SUPER_VIP_HEALTH 125
 #define SUPER_VIP_SMOKE_CHANCE 1
 #define SUPER_VIP_FLASH_CHANCE 0.5
 #define SUPER_VIP_HE_CHANCE 0.1
+#define SUPER_VIP_JUMPS_COUNT 3
+
+int jumpsCount[MAXPLAYERS];
+int lastFlags[MAXPLAYERS];
+int lastButtons[MAXPLAYERS];
 
 public Plugin myinfo = 
 {
@@ -45,6 +51,53 @@ public void OnPluginStart()
 	
 	UserMsg _sayText2 = GetUserMessageId("SayText2");
 	HookUserMessage(_sayText2, UserMessage_SayText2, true);
+}
+
+public Action OnPlayerRunCmd(int _client, int& _buttons1, int& impulse, float _vel[3], float _angles[3], int& _weapon, int& _subtype, int& _cmdnum, int& _tickcount, int& _seed, int _mouse[2])
+{
+	int _maxJumpsCount = 0;
+	if(JB_IsSuperVip(_client))
+	{
+		_maxJumpsCount = SUPER_VIP_JUMPS_COUNT;
+	}
+	else if(JB_IsVip(_client))
+	{
+		_maxJumpsCount = VIP_JUMPS_COUNT;
+	}
+	else
+	{
+		return;
+	}
+	
+	int _flags = GetEntityFlags(_client);
+	int _buttons = GetClientButtons(_client);
+	
+	if (lastFlags[_client] & FL_ONGROUND)
+	{
+		if (!(_flags & FL_ONGROUND) && !(lastButtons[_client] & IN_JUMP) && (_buttons & IN_JUMP))
+		{
+			jumpsCount[_client]++;
+		}
+	}
+	else if(_flags & FL_ONGROUND)
+	{
+		jumpsCount[_client] = 0;
+	}
+	else if (!(lastButtons[_client] & IN_JUMP) && (_buttons & IN_JUMP))
+	{
+		if(0 < jumpsCount[_client] < _maxJumpsCount)
+		{
+			jumpsCount[_client]++;
+			
+			float _velocity[3];
+			GetEntPropVector(_client, Prop_Data, "m_vecVelocity", _velocity);
+			_velocity[2] = 250.0;
+			TeleportEntity(_client, NULL_VECTOR, NULL_VECTOR, _velocity);
+		}
+	}
+	
+	lastFlags[_client] = _flags;
+	lastButtons[_client] = _buttons;
 }
 
 public Action Event_PlayerSpawn_Post(Event _event, const char[] _name, bool _dontBroadcast)

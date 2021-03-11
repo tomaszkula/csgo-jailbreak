@@ -11,30 +11,38 @@
 
 #pragma newdecls required
 
-#define WARDEN_MENU_ADD_SIMON "warden_menu_add_simon"
+// ADMIN
+#define ADMIN_MENU 								"admin_menu"
+#define ADMIN_MENU_REVIVE_MENU 					"admin_menu_revive_menu"
+#define ADMIN_MENU_CELLS_MENU 					"admin_menu_cells_menu"
 
-//#define WARDENMENU_SEARCH "search"
+// WARDEN
+#define WARDEN_MENU_ADD_SIMON 					"warden_menu_add_simon"
+#define WARDEN_MENU_SIMON_MENU 					"warden_menu_simon_menu"
 
-#define SIMON_MENU "simon_menu"
-#define SIMON_MENU_OPEN_CELLS "simon_menu_open_cells"
-#define SIMON_MENU_MINI_GAMES_MENU "simon_menu_mini_games_menu"
-#define SIMON_MENU_GAMES_MENU "simon_menu_games_menu"
+// SIMON
+#define SIMON_MENU_MAIN_MENU 					"simon_menu_main_menu"
+#define SIMON_MENU_PRISONERS_MANAGER_MENU 		"simon_menu_prisoners_manager_menu"
+#define SIMON_MENU_MINI_GAMES_MENU 				"simon_menu_mini_games_menu"
+#define SIMON_MENU_GAMES_MENU 					"simon_menu_games_menu"
 
-#define PRISONERS_MANAGER_MENU "prisoners_manager_menu"
-#define PRISONERS_MANAGER_MENU_RANDOM_MENU "prisoners_manager_menu_random_menu"
-#define PRISONERS_MANAGER_MENU_HEAL_MENU "prisoners_manager_menu_heal_menu"
-#define PRISONERS_MANAGER_MENU_FREEDAY_MENU "prisoners_manager_menu_freeday_menu"
-#define PRISONERS_MANAGER_MENU_REBEL_MENU "prisoners_manager_menu_rebel_menu"
+#define MAIN_MENU_OPEN_CELLS					"main_menu_open_cells"
+#define MAIN_MENU_COUNTDOWN_MENU				"main_menu_countdown_menu"
 
-#define RANDOM_MENU_REPETITION "random_menu_repetition"
-#define RANDOM_MENU_NO_REPETITION "random_menu_no_repetition"
-#define RANDOM_MENU_RESET "random_menu_reset"
-#define RANDOM_MENU_BLANK "blank"
+#define PRISONERS_MANAGER_MENU_RANDOM_MENU 		"prisoners_manager_menu_random_menu"
+#define PRISONERS_MANAGER_MENU_HEAL_MENU 		"prisoners_manager_menu_heal_menu"
+#define PRISONERS_MANAGER_MENU_DIVISION_MENU 	"prisoners_manager_menu_division_menu"
+#define PRISONERS_MANAGER_MENU_FREEDAY_MENU 	"prisoners_manager_menu_freeday_menu"
+#define PRISONERS_MANAGER_MENU_REBEL_MENU 		"prisoners_manager_menu_rebel_menu"
 
-#define HEAL_100_HP_MENU "heal_100_hp_menu"
-#define HEAL_MAX_HP_MENU "heal_max_hp_menu"
+#define RANDOM_MENU_REPETITION 					"random_menu_repetition"
+#define RANDOM_MENU_NO_REPETITION 				"random_menu_no_repetition"
+#define RANDOM_MENU_RESET 						"random_menu_reset"
+#define RANDOM_MENU_BLANK 						"random_menu_blank"
 
-#define DIVISION_MENU "division_menu"
+#define HEAL_MENU_HEAL_100HP_MENU 				"heal_menu_heal_100hp_menu"
+#define HEAL_MENU_HEAL_MAXHP_MENU 				"heal_menu_heal_maxhp_menu"
+
 char divisionColors[][][] =
 {
 	{"żółty",			"255 255 0"},
@@ -44,9 +52,14 @@ char divisionColors[][][] =
 	{"czarny",			"0 0 0"}
 };
 
-#define ADMIN_MENU "admin_menu"
-#define ADMIN_MENU_REVIVE_MENU "admin_menu_revive_menu"
-#define ADMIN_MENU_CELLS_MENU "admin_menu_cells_menu"
+int countdownValues[] =
+{
+	3,
+	5,
+	10
+};
+int countdown = 0;
+Handle countdownTimer = INVALID_HANDLE;
 
 public Plugin myinfo = 
 {
@@ -108,13 +121,12 @@ void displayWardenMenu(int _client)
 	_menu.SetTitle("[ MENU STRAŻNIKA ]");
 	if (JB_GetSimon() == _client)
 	{
-		_menu.AddItem(SIMON_MENU, "Menu Prowadzącego");
+		_menu.AddItem(WARDEN_MENU_SIMON_MENU, "Menu Prowadzącego");
 	}
 	else
 	{
 		_menu.AddItem(WARDEN_MENU_ADD_SIMON, "Zostań Prowadzącym");
 	}
-	//_menu.AddItem(WARDENMENU_SEARCH, "Przeszukaj więźnia");
 	_menu.AddItem(ADMIN_MENU, "Menu Admina");
 	_menu.Display(_client, MENU_TIME_FOREVER);
 }
@@ -139,7 +151,7 @@ public int WardenMenuHandler(Menu _menu, MenuAction _action, int _param1, int _p
 				JB_AddSimon(_param1);
 				displayWardenMenu(_param1);
 			}
-			else if(StrEqual(_itemInfo, SIMON_MENU))
+			else if(StrEqual(_itemInfo, WARDEN_MENU_SIMON_MENU))
 			{
 				if(JB_GetSimon() == _param1)
 				{
@@ -161,26 +173,6 @@ public int WardenMenuHandler(Menu _menu, MenuAction _action, int _param1, int _p
 					displayWardenMenu(_param1);
 				}	
 			}
-			else
-			{
-				displayMenu(_param1);
-			}
-			/*else if(StrEqual(szItemInfo, WARDENMENU_SEARCH))
-			{
-				FakeClientCommand(iClient, "search");
-				DisplayWardenMenu(iClient);
-			}*/
-			
-			/*if(!GetAdminFlag(GetUserAdmin(iClient), Admin_Ban))
-			{
-				if(StrEqual(szItemInfo, WARDENMENU_ADMINMENU))
-					return -1;
-			}
-			else
-			{
-				if(StrEqual(szItemInfo, WARDENMENU_ADMINMENU))
-					JB_DisplayAdminMenu(iClient);
-			}*/
 		}
 		
 		case MenuAction_DrawItem:
@@ -188,12 +180,20 @@ public int WardenMenuHandler(Menu _menu, MenuAction _action, int _param1, int _p
 			char _itemInfo[LENGTH_64];
 			_menu.GetItem(_param2, _itemInfo, sizeof(_itemInfo)); 
 			
-			if(StrEqual(_itemInfo, WARDEN_MENU_ADD_SIMON) && JB_CanBeSimon(_param1) == false)
+			if(StrEqual(_itemInfo, WARDEN_MENU_ADD_SIMON))
 			{
-				return ITEMDRAW_DISABLED;
+				if(JB_CanBeSimon(_param1) == false)
+				{
+					return ITEMDRAW_DISABLED;
+				}
 			}
-			/*else if(StrEqual(szItemInfo, WARDENMENU_ADMINMENU) && !GetAdminFlag(GetUserAdmin(iClient), Admin_Ban))
-				return ITEMDRAW_DISABLED;*/
+			else if(StrEqual(_itemInfo, ADMIN_MENU))
+			{
+				if(GetUserAdmin(_param1) == INVALID_ADMIN_ID)
+				{
+					return ITEMDRAW_DISABLED;
+				}
+			}
 		}
 		
 		case MenuAction_End:
@@ -317,8 +317,8 @@ void displaySimonMenu(int _client)
 	
 	Menu _menu = CreateMenu(SimonMenuHandler, MENU_ACTIONS_ALL);
 	_menu.SetTitle("[ MENU PROWADZĄCEGO ]");
-	_menu.AddItem(SIMON_MENU_OPEN_CELLS, "Otwórz cele");
-	_menu.AddItem(PRISONERS_MANAGER_MENU, "Menu zarządzania więźniami");
+	_menu.AddItem(SIMON_MENU_MAIN_MENU, "Menu główne");
+	_menu.AddItem(SIMON_MENU_PRISONERS_MANAGER_MENU, "Menu zarządzania więźniami");
 	_menu.AddItem(SIMON_MENU_MINI_GAMES_MENU, "Menu mini zabaw");
 	_menu.AddItem(SIMON_MENU_GAMES_MENU, "Menu zabaw");
 	_menu.ExitBackButton = true;
@@ -340,32 +340,27 @@ public int SimonMenuHandler(Menu _menu, MenuAction _action, int _param1, int _pa
 			char _itemInfo[LENGTH_64];
 			_menu.GetItem(_param2, _itemInfo, sizeof(_itemInfo)); 
 			
-			if(StrEqual(_itemInfo, SIMON_MENU_OPEN_CELLS))
+			if(StrEqual(_itemInfo, SIMON_MENU_MAIN_MENU))
 			{
-				JB_OpenCells();
-				displaySimonMenu(_param1);
+				displaySimonMenuMainMenu(_param1);
 			}
-			else if(StrEqual(_itemInfo, PRISONERS_MANAGER_MENU))
+			else if(StrEqual(_itemInfo, SIMON_MENU_PRISONERS_MANAGER_MENU))
 			{
-				displayPrisonersManagerMenu(_param1);
+				displaySimonMenuPrisonersManagerMenu(_param1);
 			}
 			else if(StrEqual(_itemInfo, SIMON_MENU_MINI_GAMES_MENU))
 			{
-				
+				//displaySimonMenuMiniGamesMenu(_param1);
 			}
 			else if(StrEqual(_itemInfo, SIMON_MENU_GAMES_MENU))
 			{
-				
-			}
-			else
-			{
-				displayMenu(_param1);
+				displaySimonMenuGamesMenu(_param1);
 			}
 		}
 		
 		case MenuAction_Cancel:
 		{
-			if(_param2 == MenuCancel_ExitBack | MenuCancel_Interrupted)
+			if(_param2 & (MenuCancel_ExitBack | MenuCancel_Interrupted))
 			{
 				displayMenu(_param1);
 			}
@@ -380,7 +375,7 @@ public int SimonMenuHandler(Menu _menu, MenuAction _action, int _param1, int _pa
 	return 0;
 }
 
-void displayPrisonersManagerMenu(int _client)
+void displaySimonMenuMainMenu(int _client)
 {
 	if(JB_GetSimon() != _client)
 	{
@@ -388,18 +383,158 @@ void displayPrisonersManagerMenu(int _client)
 		return;
 	}
 	
-	Menu _menu = CreateMenu(PrisonersManagerMenuHandler, MENU_ACTIONS_ALL);
-	_menu.SetTitle("[Menu] Zarządzanie więźniami");
+	Menu _menu = CreateMenu(SimonMenuMainMenuHandler, MENU_ACTIONS_ALL);
+	_menu.SetTitle("[ MENU GŁÓWNE ]");
+	_menu.AddItem(MAIN_MENU_OPEN_CELLS, "Otwórz cele");
+	_menu.AddItem(MAIN_MENU_COUNTDOWN_MENU, "Menu odliczania");
+	_menu.ExitBackButton = true;
+	_menu.Display(_client, MENU_TIME_FOREVER);
+}
+
+public int SimonMenuMainMenuHandler(Menu _menu, MenuAction _action, int _param1, int _param2)
+{
+	switch(_action)
+	{
+		case MenuAction_Select:
+		{
+			if(JB_GetSimon() != _param1)
+			{
+				displayMenu(_param1);
+				return -1;
+			}
+			
+			char _itemInfo[LENGTH_64];
+			_menu.GetItem(_param2, _itemInfo, sizeof(_itemInfo)); 
+			
+			if(StrEqual(_itemInfo, MAIN_MENU_OPEN_CELLS))
+			{
+				JB_OpenCells();
+				displaySimonMenuMainMenu(_param1);
+			}
+			else if(StrEqual(_itemInfo, MAIN_MENU_COUNTDOWN_MENU))
+			{
+				displayMainMenuCountdownMenu(_param1);
+			}
+		}
+		
+		case MenuAction_Cancel:
+		{
+			if(_param2 & (MenuCancel_ExitBack | MenuCancel_Interrupted))
+			{
+				displaySimonMenu(_param1);
+			}
+		}
+		
+		case MenuAction_End:
+		{
+			delete _menu;
+		}
+	}
+	
+	return 0;
+}
+
+void displayMainMenuCountdownMenu(int _client)
+{
+	if(JB_GetSimon() != _client)
+	{
+		displayMenu(_client);
+		return;
+	}
+	
+	Menu _menu = CreateMenu(MainMenuCountdownHandler, MENU_ACTIONS_ALL);
+	_menu.SetTitle("[ MENU ODLICZANIA ]");
+	char _itemInfo[LENGTH_4], _itemTitle[LENGTH_64];
+	for (int i = 0; i < sizeof(countdownValues); i++)
+	{
+		Format(_itemInfo, sizeof(_itemInfo), "%i", countdownValues[i]);
+		Format(_itemTitle, sizeof(_itemTitle), "%is", countdownValues[i]);
+		_menu.AddItem(_itemInfo, _itemTitle);
+	}
+	_menu.ExitBackButton = true;
+	_menu.Display(_client, MENU_TIME_FOREVER);
+}
+
+public int MainMenuCountdownHandler(Menu _menu, MenuAction _action, int _param1, int _param2)
+{
+	switch(_action)
+	{
+		case MenuAction_Select:
+		{
+			if(JB_GetSimon() != _param1)
+			{
+				displayMenu(_param1);
+				return -1;
+			}
+			
+			char _itemInfo[LENGTH_64];
+			_menu.GetItem(_param2, _itemInfo, sizeof(_itemInfo)); 
+			
+			breakCountdownTimer();
+			
+			countdown = StringToInt(_itemInfo);
+			countdownTimer = CreateTimer(1.0, CountdownTimer, _, TIMER_REPEAT);
+			
+			displayMainMenuCountdownMenu(_param1);
+		}
+		
+		case MenuAction_Cancel:
+		{
+			if(_param2 & (MenuCancel_ExitBack | MenuCancel_Interrupted))
+			{
+				displaySimonMenuMainMenu(_param1);
+			}
+		}
+		
+		case MenuAction_End:
+		{
+			delete _menu;
+		}
+	}
+	
+	return 0;
+}
+
+public Action CountdownTimer(Handle _timer)
+{
+	JB_PlayCountdownSound(countdown);
+	countdown--;
+	
+	if(countdown <= 0)
+	{
+		breakCountdownTimer();
+	}
+}
+
+void breakCountdownTimer()
+{
+	if(countdownTimer != INVALID_HANDLE)
+	{
+		KillTimer(countdownTimer);
+		countdownTimer = INVALID_HANDLE;
+	}
+}
+
+void displaySimonMenuPrisonersManagerMenu(int _client)
+{
+	if(JB_GetSimon() != _client)
+	{
+		displayMenu(_client);
+		return;
+	}
+	
+	Menu _menu = CreateMenu(SimonMenuPrisonersManagerMenuHandler, MENU_ACTIONS_ALL);
+	_menu.SetTitle("[ MENU ZARZĄDZANIA WIĘŹNIAMI ]");
 	_menu.AddItem(PRISONERS_MANAGER_MENU_RANDOM_MENU, "Wylosuj więźnia");
 	_menu.AddItem(PRISONERS_MANAGER_MENU_HEAL_MENU, "Ulecz więźnia");
-	_menu.AddItem(DIVISION_MENU, "Podziel więźniów");
+	_menu.AddItem(PRISONERS_MANAGER_MENU_DIVISION_MENU, "Podziel więźniów");
 	_menu.AddItem(PRISONERS_MANAGER_MENU_FREEDAY_MENU, "Daj/Zabierz FreeDay'a");
 	_menu.AddItem(PRISONERS_MANAGER_MENU_REBEL_MENU, "Zabierz buntownika");
 	_menu.ExitBackButton = true;
 	_menu.Display(_client, MENU_TIME_FOREVER);
 }
 
-public int PrisonersManagerMenuHandler(Menu _menu, MenuAction _action, int _param1, int _param2)
+public int SimonMenuPrisonersManagerMenuHandler(Menu _menu, MenuAction _action, int _param1, int _param2)
 {
 	switch(_action)
 	{
@@ -422,7 +557,7 @@ public int PrisonersManagerMenuHandler(Menu _menu, MenuAction _action, int _para
 			{
 				displayHealMenu(_param1);
 			}
-			else if(StrEqual(_itemInfo, DIVISION_MENU))
+			else if(StrEqual(_itemInfo, PRISONERS_MANAGER_MENU_DIVISION_MENU))
 			{
 				displayDivisionMenu(_param1);
 			}
@@ -434,15 +569,75 @@ public int PrisonersManagerMenuHandler(Menu _menu, MenuAction _action, int _para
 			{
 				displayRebelMenu(_param1);
 			}
-			else
+		}
+		
+		case MenuAction_Cancel:
+		{
+			if(_param2 & (MenuCancel_ExitBack | MenuCancel_Interrupted))
 			{
 				displaySimonMenu(_param1);
 			}
 		}
 		
+		case MenuAction_End:
+		{
+			delete _menu;
+		}
+	}
+	
+	return 0;
+}
+
+void displaySimonMenuGamesMenu(int _client)
+{
+	if(JB_GetSimon() != _client)
+	{
+		displayMenu(_client);
+		return;
+	}
+	
+	Menu _menu = CreateMenu(SimonMenuGamesMenuHandler, MENU_ACTIONS_ALL);
+	_menu.SetTitle("[ MENU ZABAW ]");
+	char _itemInfo[LENGTH_4], _itemTitle[LENGTH_64];
+	for (int i = 0; i < 1; i++)
+	{
+		bool _isGameValid = JB_GetGameName(i, _itemTitle, sizeof(_itemTitle));
+		if(!_isGameValid)
+		{
+			continue;
+		}
+		
+		Format(_itemInfo, sizeof(_itemInfo), "%i", i);
+		_menu.AddItem(_itemInfo, _itemTitle);
+	}
+	_menu.ExitBackButton = true;
+	_menu.Display(_client, MENU_TIME_FOREVER);
+}
+
+public int SimonMenuGamesMenuHandler(Menu _menu, MenuAction _action, int _param1, int _param2)
+{
+	switch(_action)
+	{
+		case MenuAction_Select:
+		{
+			if(JB_GetSimon() != _param1)
+			{
+				displayMenu(_param1);
+				return -1;
+			}
+			
+			char _itemInfo[4];
+			_menu.GetItem(_param2, _itemInfo, sizeof(_itemInfo));
+			
+			int _gameID = StringToInt(_itemInfo);
+			JB_StartGame(_gameID);
+			
+			displaySimonMenuGamesMenu(_param1);
+		}
+		
 		case MenuAction_Cancel:
 		{
-			if(_param2 == MenuCancel_ExitBack | MenuCancel_Interrupted)
+			if(_param2 & (MenuCancel_ExitBack | MenuCancel_Interrupted))
 			{
 				displaySimonMenu(_param1);
 			}
@@ -541,9 +736,9 @@ public int RandomMenuHandler(Menu _menu, MenuAction _action, int _param1, int _p
 		
 		case MenuAction_Cancel:
 		{
-			if(_param2 == MenuCancel_ExitBack | MenuCancel_Interrupted)
+			if(_param2 & (MenuCancel_ExitBack | MenuCancel_Interrupted))
 			{
-				displayPrisonersManagerMenu(_param1);
+				displaySimonMenuPrisonersManagerMenu(_param1);
 			}
 		}
 		
@@ -566,8 +761,8 @@ void displayHealMenu(int _client)
 	
 	Menu _menu = CreateMenu(HealMenuHandler, MENU_ACTIONS_ALL);
 	_menu.SetTitle("[Menu] Ulecz więźnia");
-	_menu.AddItem(HEAL_100_HP_MENU, "Do 100 HP");
-	_menu.AddItem(HEAL_MAX_HP_MENU, "Do maksymalnego HP");
+	_menu.AddItem(HEAL_MENU_HEAL_100HP_MENU, "Do 100 HP");
+	_menu.AddItem(HEAL_MENU_HEAL_MAXHP_MENU, "Do maksymalnego HP");
 	_menu.ExitBackButton = true;
 	_menu.Display(_client, MENU_TIME_FOREVER);
 }
@@ -587,25 +782,21 @@ public int HealMenuHandler(Menu _menu, MenuAction _action, int _param1, int _par
 			char _itemInfo[LENGTH_64];
 			_menu.GetItem(_param2, _itemInfo, sizeof(_itemInfo)); 
 			
-			if(StrEqual(_itemInfo, HEAL_100_HP_MENU))
+			if(StrEqual(_itemInfo, HEAL_MENU_HEAL_100HP_MENU))
 			{
 				displayHeal100HPMenu(_param1);
 			}
-			else if(StrEqual(_itemInfo, HEAL_MAX_HP_MENU))
+			else if(StrEqual(_itemInfo, HEAL_MENU_HEAL_MAXHP_MENU))
 			{
 				//displayHealMenu(_param1);
-			}
-			else
-			{
-				displayPrisonersManagerMenu(_param1);
 			}
 		}
 		
 		case MenuAction_Cancel:
 		{
-			if(_param2 == MenuCancel_ExitBack | MenuCancel_Interrupted)
+			if(_param2 & (MenuCancel_ExitBack | MenuCancel_Interrupted))
 			{
-				displayPrisonersManagerMenu(_param1);
+				displaySimonMenuPrisonersManagerMenu(_param1);
 			}
 		}
 		
@@ -679,7 +870,7 @@ public int Heal100HPMenuHandler(Menu _menu, MenuAction _action, int _param1, int
 		
 		case MenuAction_Cancel:
 		{
-			if(_param2 == MenuCancel_ExitBack | MenuCancel_Interrupted)
+			if(_param2 & (MenuCancel_ExitBack | MenuCancel_Interrupted))
 			{
 				displayHealMenu(_param1);
 			}
@@ -771,9 +962,9 @@ public int DivisionMenuHandler(Menu _menu, MenuAction _action, int _param1, int 
 		
 		case MenuAction_Cancel:
 		{
-			if(_param2 == MenuCancel_ExitBack | MenuCancel_Interrupted)
+			if(_param2 & (MenuCancel_ExitBack | MenuCancel_Interrupted))
 			{
-				displayPrisonersManagerMenu(_param1);
+				displaySimonMenuPrisonersManagerMenu(_param1);
 			}
 		}
 		
@@ -860,9 +1051,9 @@ public int FreeDayMenuHandler(Menu _menu, MenuAction _action, int _param1, int _
 		
 		case MenuAction_Cancel:
 		{
-			if(_param2 == MenuCancel_ExitBack | MenuCancel_Interrupted)
+			if(_param2 & (MenuCancel_ExitBack | MenuCancel_Interrupted))
 			{
-				displayPrisonersManagerMenu(_param1);
+				displaySimonMenuPrisonersManagerMenu(_param1);
 			}
 		}
 		
@@ -937,9 +1128,9 @@ public int RebelMenuHandler(Menu _menu, MenuAction _action, int _param1, int _pa
 		
 		case MenuAction_Cancel:
 		{
-			if(_param2 == MenuCancel_ExitBack | MenuCancel_Interrupted)
+			if(_param2 & (MenuCancel_ExitBack | MenuCancel_Interrupted))
 			{
-				displayPrisonersManagerMenu(_param1);
+				displaySimonMenuPrisonersManagerMenu(_param1);
 			}
 		}
 		
@@ -995,7 +1186,7 @@ public int AdminMenuHandler(Menu _menu, MenuAction _action, int _param1, int _pa
 		
 		case MenuAction_Cancel:
 		{
-			if(_param2 == MenuCancel_ExitBack | MenuCancel_Interrupted)
+			if(_param2 & (MenuCancel_ExitBack | MenuCancel_Interrupted))
 			{
 				displayMenu(_param1);
 			}
@@ -1072,7 +1263,7 @@ public int ReviveMenuHandler(Menu _menu, MenuAction _action, int _param1, int _p
 		
 		case MenuAction_Cancel:
 		{
-			if(_param2 == MenuCancel_ExitBack | MenuCancel_Interrupted)
+			if(_param2 & (MenuCancel_ExitBack | MenuCancel_Interrupted))
 			{
 				displayAdminMenu(_param1);
 			}
@@ -1176,7 +1367,7 @@ public int CellsMenuHandler(Menu _menu, MenuAction _action, int _param1, int _pa
 		
 		case MenuAction_Cancel:
 		{
-			if(_param2 == MenuCancel_ExitBack | MenuCancel_Interrupted)
+			if(_param2 & (MenuCancel_ExitBack | MenuCancel_Interrupted))
 			{
 				displayAdminMenu(_param1);
 			}

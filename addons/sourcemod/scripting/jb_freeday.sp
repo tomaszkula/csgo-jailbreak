@@ -33,11 +33,13 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char [] error, int err_ma
 	CreateNative("JB_AddFreeDayNextDay", AddFreeDayNextDay);
 	CreateNative("JB_RemoveFreeDay", RemoveFreeDay);
 	CreateNative("JB_HasFreeDay", HasFreeDay);
+	CreateNative("JB_HasFreeDayNextDay", HasFreeDayNextDay);
 }
 
 public void OnPluginStart()
 {
 	HookEvent("round_prestart", Event_RoundPrestart_Post);
+	HookEvent("player_spawn", Event_PlayerSpawn_Post);
 	HookEvent("player_death", Event_PlayerDeath_Post);
 	
 	onAddFreeDay = CreateGlobalForward("OnAddFreeDay", ET_Event, Param_Cell);
@@ -59,6 +61,14 @@ public void OnClientDisconnect_Post(int _client)
 public void OnAddRebel(int _client)
 {
 	JB_RemoveFreeDay(_client);
+}
+
+public void OnGameStart(int _gameID)
+{
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		JB_RemoveFreeDay(i);
+	}
 }
 
 public Action Event_RoundPrestart_Post(Event _event, const char[] _name, bool _dontBroadcast)
@@ -95,7 +105,7 @@ public Action Event_PlayerDeath_Post(Event _event, const char[] _name, bool _don
 
 public Action SDKHookCB_OnTakeDamage(int _victim, int &_attacker, int &_inflictor, float &_damage, int &_damagetype)
 {
-	if(_attacker > 0 && _attacker <= MaxClients && JB_HasFreeDay(_attacker))
+	if(JB_HasFreeDay(_attacker))
 	{
 		return Plugin_Handled;
 	}
@@ -176,5 +186,16 @@ public int RemoveFreeDay(Handle plugin, int argc)
 public int HasFreeDay(Handle plugin, int argc)
 {
 	int _client = GetNativeCell(1);
+	if(_client < 0 || _client > MaxClients)
+	{
+		return false;
+	}
+	
 	return hasFreeDay[_client];
+}
+
+public int HasFreeDayNextDay(Handle plugin, int argc)
+{
+	int _client = GetNativeCell(1);
+	return hasFreeDayNextDay[_client];
 }

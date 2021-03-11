@@ -53,6 +53,11 @@ public void OnClientDisconnect_Post(int _client)
 	}
 }
 
+public void OnGameStart(int _gameID)
+{
+	removeSimon();
+}
+
 public Action Event_RoundPrestart_Post(Event _event, const char[] _name, bool _dontBroadcast)
 {
 	removeSimon();

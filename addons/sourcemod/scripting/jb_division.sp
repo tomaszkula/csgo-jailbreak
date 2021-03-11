@@ -39,10 +39,7 @@ public void OnPluginStart()
 
 public void OnClientDisconnect_Post(int _client)
 {
-	if(JB_IsDivided(_client))
-	{
-		JB_RemoveDivision(_client);
-	}
+	JB_RemoveDivision(_client);
 }
 
 public void OnAddFreeDay(int _client)
@@ -53,6 +50,14 @@ public void OnAddFreeDay(int _client)
 public void OnAddRebel(int _client)
 {
 	JB_RemoveDivision(_client);
+}
+
+public void OnGameStart(int _gameID)
+{
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		JB_RemoveDivision(i);
+	}
 }
 
 public Action Event_RoundPrestart_Post(Event _event, const char[] _name, bool _dontBroadcast)
